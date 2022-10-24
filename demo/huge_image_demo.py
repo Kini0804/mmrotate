@@ -4,7 +4,7 @@
 Example:
 ```
 wget -P checkpoint https://download.openmmlab.com/mmrotate/v0.1.0/oriented_rcnn/oriented_rcnn_r50_fpn_1x_dota_le90/oriented_rcnn_r50_fpn_1x_dota_le90-6d2b2ce0.pth  # noqa: E501, E261.
-python demo/huge_image_demo.py \
+python3 demo/huge_image_demo.py \
     demo/dota_demo.jpg \
     configs/oriented_rcnn/oriented_rcnn_r50_fpn_1x_dota_v3.py \
     checkpoint/oriented_rcnn_r50_fpn_1x_dota_le90-6d2b2ce0.pth \
@@ -17,6 +17,8 @@ from mmdet.apis import init_detector, show_result_pyplot
 
 from mmrotate.apis import inference_detector_by_patches
 
+import os
+os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 
 def parse_args():
     parser = ArgumentParser()

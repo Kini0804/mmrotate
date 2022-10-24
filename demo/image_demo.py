@@ -1,9 +1,14 @@
+import os
+os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
+
 # Copyright (c) OpenMMLab. All rights reserved.
 from argparse import ArgumentParser
 
 from mmdet.apis import inference_detector, init_detector, show_result_pyplot
 
 import mmrotate  # noqa: F401
+
+
 
 
 def parse_args():
