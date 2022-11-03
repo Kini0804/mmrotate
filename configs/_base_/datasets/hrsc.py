@@ -1,6 +1,6 @@
 # dataset settings
 dataset_type = 'HRSCDataset'
-data_root = 'data/hrsc/'
+data_root = 'data/HRSC2016/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
@@ -32,7 +32,7 @@ data = dict(
     workers_per_gpu=2,
     train=dict(
         type=dataset_type,
-        classwise=False,
+        classwise=True,
         ann_file=data_root + 'ImageSets/trainval.txt',
         ann_subdir=data_root + 'FullDataSet/Annotations/',
         img_subdir=data_root + 'FullDataSet/AllImages/',
@@ -40,7 +40,7 @@ data = dict(
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
-        classwise=False,
+        classwise=True,
         ann_file=data_root + 'ImageSets/test.txt',
         ann_subdir=data_root + 'FullDataSet/Annotations/',
         img_subdir=data_root + 'FullDataSet/AllImages/',
@@ -48,7 +48,7 @@ data = dict(
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
-        classwise=False,
+        classwise=True,
         ann_file=data_root + 'ImageSets/test.txt',
         ann_subdir=data_root + 'FullDataSet/Annotations/',
         img_subdir=data_root + 'FullDataSet/AllImages/',
