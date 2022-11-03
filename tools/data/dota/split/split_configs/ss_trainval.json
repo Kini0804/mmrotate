@@ -1,15 +1,13 @@
 {
   "nproc": 10,
   "img_dirs": [
-    "data/DOTA/train/images/",
-    "data/DOTA/val/images/"
+    "data/ShipData/trainval/images/"
   ],
   "ann_dirs": [
-    "data/DOTA/train/labelTxt/",
-    "data/DOTA/val/labelTxt/"
+    "data/ShipData/trainval/annfiles/"
   ],
   "sizes": [
-    1024
+    640
   ],
   "gaps": [
     200
@@ -22,9 +20,8 @@
   "no_padding": false,
   "padding_value": [
     104,
-    116,
-    124
+    116
   ],
-  "save_dir": "data/split_ss_dota/trainval/",
+  "save_dir": "data/split_ShipData/trainval/",
   "save_ext": ".png"
 }
