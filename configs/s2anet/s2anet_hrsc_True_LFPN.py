@@ -18,7 +18,7 @@ model = dict(
         style='pytorch',
         init_cfg=dict(type='Pretrained', checkpoint='torchvision://resnet50')),
     neck=dict(
-        type='FPN',
+        type='LFPN',
         in_channels=[256, 512, 1024, 2048],
         out_channels=256,
         start_level=1,
@@ -131,4 +131,4 @@ data = dict(
     val=dict(version=angle_version),
     test=dict(version=angle_version))
 evaluation = dict(
-    save_best='auto', interval=5, dynamic_intervals=[(45, 1)], metric='mAP')
+    save_best='auto', interval=1, dynamic_intervals=[(45, 1)], metric='mAP')
