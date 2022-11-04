@@ -6,16 +6,64 @@ from mmcv.ops import RoIPool
 from mmcv.parallel import collate, scatter
 from mmdet.datasets import replace_ImageToTensor
 from mmdet.datasets.pipelines import Compose
+from mmrotate.datasets import build_dataset
+from mmrotate.models import build_detector
+from mmrotate.utils import compat_cfg, setup_multi_processes
+from pathlib import Path
+from mmcv.runner import load_checkpoint
 
 from mmrotate.core import get_multiscale_patch, merge_results, slide_window
 
 
+def init_detector(config, checkpoint=None, device='cuda:0', cfg_options=None):
+    """Initialize a detector from config file.
+
+    Args:
+        config (str, :obj:`Path`, or :obj:`mmcv.Config`): Config file path,
+            :obj:`Path`, or the config object.
+        checkpoint (str, optional): Checkpoint path. If left as None, the model
+            will not load any weights.
+        cfg_options (dict): Options to override some settings in the used
+            config.
+
+    Returns:
+        nn.Module: The constructed detector.
+    """
+    if isinstance(config, (str, Path)):
+        config = mmcv.Config.fromfile(config)
+    elif not isinstance(config, mmcv.Config):
+        raise TypeError('config must be a filename or Config object, '
+                        f'but got {type(config)}')
+    if cfg_options is not None:
+        config.merge_from_dict(cfg_options)
+    if 'pretrained' in config.model:
+        config.model.pretrained = None
+    elif 'init_cfg' in config.model.backbone:
+        config.model.backbone.init_cfg = None
+    config.model.train_cfg = None
+    model = build_detector(config.model, test_cfg=config.get('test_cfg'))
+    if checkpoint is not None:
+        checkpoint = load_checkpoint(model, checkpoint, map_location='cpu')
+        if 'CLASSES' in checkpoint.get('meta', {}):
+            model.CLASSES = checkpoint['meta']['CLASSES']
+        else:
+            warnings.simplefilter('once')
+            warnings.warn('Class names are not saved in the checkpoint\'s '
+                          'meta data, use COCO classes by default.')
+            model.CLASSES = get_classes('coco')
+    model.cfg = config  # save the config in the model for convenience
+    model.to(device)
+    model.eval()
+    return model
+
+
+
 def inference_detector_by_patches(model,
                                   img,
-                                  sizes,
-                                  steps,
-                                  ratios,
-                                  merge_iou_thr,
+                                  sizes=[32,64],
+                                  steps=[4,8],
+                                  ratios=[1,2],
+                                  merge_iou_thr=[0.5],
                                   bs=1):
     """inference patches with the detector.
 
@@ -84,7 +132,7 @@ def inference_detector_by_patches(model,
         if end >= len(windows):
             break
         start += bs
-
+    print(results)
     results = merge_results(
         results,
         windows[:, :2],
