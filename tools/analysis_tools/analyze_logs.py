@@ -5,15 +5,10 @@ from collections import defaultdict
 
 import matplotlib.pyplot as plt
 import numpy as np
-
-try:
-    import seaborn as sns
-except ImportError:
-    sns = None
+import seaborn as sns
 
 
 def cal_train_time(log_dicts, args):
-    """calculate the training time."""
     for i, log_dict in enumerate(log_dicts):
         print(f'{"-" * 5}Analyze train time of {args.json_logs[i]}{"-" * 5}')
         all_times = []
@@ -22,6 +17,10 @@ def cal_train_time(log_dicts, args):
                 all_times.append(log_dict[epoch]['time'])
             else:
                 all_times.append(log_dict[epoch]['time'][1:])
+        if not all_times:
+            raise KeyError(
+                'Please reduce the log interval in the config so that'
+                'interval is less than iterations of one epoch.')
         all_times = np.array(all_times)
         epoch_ave_time = all_times.mean(-1)
         slowest_epoch = epoch_ave_time.argmax()
@@ -37,12 +36,8 @@ def cal_train_time(log_dicts, args):
 
 
 def plot_curve(log_dicts, args):
-    """Plot curve."""
     if args.backend is not None:
         plt.switch_backend(args.backend)
-    if sns is None:
-        raise ImportError('Please run "pip install seaborn" '
-                          'to install seaborn first.')
     sns.set_style(args.style)
     # if legend is None, use {filename}_{key} as legend
     legend = args.legend
@@ -59,17 +54,24 @@ def plot_curve(log_dicts, args):
         epochs = list(log_dict.keys())
         for j, metric in enumerate(metrics):
             print(f'plot curve of {args.json_logs[i]}, metric is {metric}')
-            if metric not in log_dict[epochs[0]]:
+            if metric not in log_dict[epochs[int(args.eval_interval) - 1]]:
+                if 'mAP' in metric:
+                    raise KeyError(
+                        f'{args.json_logs[i]} does not contain metric '
+                        f'{metric}. Please check if "--no-validate" is '
+                        'specified when you trained the model.')
                 raise KeyError(
-                    f'{args.json_logs[i]} does not contain metric {metric}')
+                    f'{args.json_logs[i]} does not contain metric {metric}. '
+                    'Please reduce the log interval in the config so that '
+                    'interval is less than iterations of one epoch.')
 
             if 'mAP' in metric:
-                xs = np.arange(1, max(epochs) + 1)
+                xs = []
                 ys = []
                 for epoch in epochs:
                     ys += log_dict[epoch][metric]
-                ax = plt.gca()
-                ax.set_xticks(xs)
+                    if 'val' in log_dict[epoch]['mode']:
+                        xs.append(epoch)
                 plt.xlabel('epoch')
                 plt.plot(xs, ys, label=legend[i * num_metrics + j], marker='o')
             else:
@@ -100,7 +102,6 @@ def plot_curve(log_dicts, args):
 
 
 def add_plot_parser(subparsers):
-    """Add plot parser."""
     parser_plt = subparsers.add_parser(
         'plot_curve', help='parser for plotting curves')
     parser_plt.add_argument(
@@ -114,6 +115,16 @@ def add_plot_parser(subparsers):
         nargs='+',
         default=['bbox_mAP'],
         help='the metric that you want to plot')
+    parser_plt.add_argument(
+        '--start-epoch',
+        type=str,
+        default='1',
+        help='the epoch that you want to start')
+    parser_plt.add_argument(
+        '--eval-interval',
+        type=str,
+        default='5',
+        help='the eval interval when training')
     parser_plt.add_argument('--title', type=str, help='title of figure')
     parser_plt.add_argument(
         '--legend',
@@ -129,7 +140,6 @@ def add_plot_parser(subparsers):
 
 
 def add_time_parser(subparsers):
-    """Add time parser."""
     parser_time = subparsers.add_parser(
         'cal_train_time',
         help='parser for computing the average time per training iteration')
@@ -146,7 +156,6 @@ def add_time_parser(subparsers):
 
 
 def parse_args():
-    """Parse parameters."""
     parser = argparse.ArgumentParser(description='Analyze Json Log')
     # currently only support plot curve and calculate average train time
     subparsers = parser.add_subparsers(dest='task', help='task parser')
@@ -157,21 +166,17 @@ def parse_args():
 
 
 def load_json_logs(json_logs):
-    """Load and convert json_logs to log_dict, key is epoch, value is a sub
-    dict keys of sub dict is different metrics, e.g. memory, bbox_mAP value of
-    sub dict is a list of corresponding values of all iterations.
-
-    Args:
-        json_logs (str): json file of logs.
-
-    Returns:
-        dict: dict of logs.
-    """
-    log_dicts = [{} for _ in json_logs]
+    # load and convert json_logs to log_dict, key is epoch, value is a sub dict
+    # keys of sub dict is different metrics, e.g. memory, bbox_mAP
+    # value of sub dict is a list of corresponding values of all iterations
+    log_dicts = [dict() for _ in json_logs]
     for json_log, log_dict in zip(json_logs, log_dicts):
         with open(json_log, 'r') as log_file:
-            for line in log_file:
+            for i, line in enumerate(log_file):
                 log = json.loads(line.strip())
+                # skip the first training info line
+                if i == 0:
+                    continue
                 # skip lines without `epoch` field
                 if 'epoch' not in log:
                     continue
@@ -184,7 +189,6 @@ def load_json_logs(json_logs):
 
 
 def main():
-    """Main function of analyze logs."""
     args = parse_args()
 
     json_logs = args.json_logs
