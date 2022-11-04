@@ -208,18 +208,18 @@ class LFPN(BaseModule):
                     act_cfg=act_cfg,
                     inplace=False)
                 self.fpn_convs.append(extra_fpn_conv)
-                f_norm = BatchNorm2d(out_channels)
-                self.fpn_norms.append(f_norm)
-                encoder_blocks = []
-                block_dilations = [2, 4, 6, 8]
-                for j in range(4):
-                    dilation = block_dilations[j]
-                    encoder_blocks.append(
-                        Bottleneck(
-                            out_channels,
-                            128,
-                            dilation=dilation))
-                self.dilated_encoder_blocks.append(nn.Sequential(*encoder_blocks))
+                # f_norm = BatchNorm2d(out_channels)
+                # self.fpn_norms.append(f_norm)
+                # encoder_blocks = []
+                # block_dilations = [2, 4, 6, 8]
+                # for j in range(4):
+                #     dilation = block_dilations[j]
+                #     encoder_blocks.append(
+                #         Bottleneck(
+                #             out_channels,
+                #             128,
+                #             dilation=dilation))
+                # self.dilated_encoder_blocks.append(nn.Sequential(*encoder_blocks))
 
     @auto_fp16()
     def forward(self, inputs):
@@ -255,29 +255,6 @@ class LFPN(BaseModule):
         outs = [
             self.fpn_convs[i](laterals_norm[i]) for i in range(used_backbone_levels)
         ]
-        # part 2: add extra levels
-        if self.num_outs > len(outs):
-            # use max pool to get more levels on top of outputs
-            # (e.g., Faster R-CNN, Mask R-CNN)
-            if not self.add_extra_convs:
-                for i in range(self.num_outs - used_backbone_levels):
-                    outs.append(F.max_pool2d(outs[-1], 1, stride=2))
-            # add conv layers on top of original feature maps (RetinaNet)
-            else:
-                if self.add_extra_convs == 'on_input':
-                    extra_source = inputs[self.backbone_end_level - 1]
-                elif self.add_extra_convs == 'on_lateral':
-                    extra_source = laterals_norm[-1]
-                elif self.add_extra_convs == 'on_output':
-                    extra_source = outs[-1]
-                else:
-                    raise NotImplementedError
-                outs.append(self.fpn_convs[used_backbone_levels](extra_source))
-                for i in range(used_backbone_levels + 1, self.num_outs):
-                    if self.relu_before_extra_convs:
-                        outs.append(self.fpn_convs[i](F.relu(outs[-1])))
-                    else:
-                        outs.append(self.fpn_convs[i](outs[-1]))
         outs_norms = [
             f_norm(outs[i])
             for i, f_norm in enumerate(self.fpn_norms)
@@ -286,4 +263,28 @@ class LFPN(BaseModule):
             block(outs_norms[i])
             for i, block in enumerate(self.dilated_encoder_blocks)
         ]
+        # part 2: add extra levels
+        if self.num_outs > len(outs):
+            # use max pool to get more levels on top of outputs
+            # (e.g., Faster R-CNN, Mask R-CNN)
+            if not self.add_extra_convs:
+                for i in range(self.num_outs - used_backbone_levels):
+                    outs_delated.append(F.max_pool2d(outs_delated[-1], 1, stride=2))
+            # add conv layers on top of original feature maps (RetinaNet)
+            else:
+                if self.add_extra_convs == 'on_input':
+                    extra_source = inputs[self.backbone_end_level - 1]
+                elif self.add_extra_convs == 'on_lateral':
+                    extra_source = laterals[-1]
+                elif self.add_extra_convs == 'on_output':
+                    extra_source = outs_delated[-1]
+                else:
+                    raise NotImplementedError
+                outs_delated.append(self.fpn_convs[used_backbone_levels](extra_source))
+                for i in range(used_backbone_levels + 1, self.num_outs):
+                    if self.relu_before_extra_convs:
+                        outs_delated.append(self.fpn_convs[i](F.relu(outs_delated[-1])))
+                    else:
+                        outs_delated.append(self.fpn_convs[i](outs_delated[-1]))
+        
         return tuple(outs_delated)
