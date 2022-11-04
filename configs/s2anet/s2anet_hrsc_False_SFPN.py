@@ -1,5 +1,5 @@
 _base_ = [
-    '../_base_/datasets/hrsc.py', '../_base_/schedules/schedule_1x.py',
+    '../_base_/datasets/hrsc.py', '../_base_/schedules/schedule_3x.py',
     '../_base_/default_runtime.py'
 ]
 
@@ -10,7 +10,7 @@ model = dict(
         type='ResNet',
         depth=50,
         num_stages=4,
-        out_indices=(3,),
+        out_indices=(0, 1, 2, 3),
         frozen_stages=1,
         zero_init_residual=False,
         norm_cfg=dict(type='BN', requires_grad=True),
@@ -18,61 +18,24 @@ model = dict(
         style='pytorch',
         init_cfg=dict(type='Pretrained', checkpoint='torchvision://resnet50')),
     neck=dict(
-        type='DilatedEncoder',
-        in_channels=2048,
-        out_channels=512,
-        block_mid_channels=128,
-        num_residual_blocks=4,
-        block_dilations=[2, 4, 6, 8]),
-    # bbox_head=dict(
-    #     type='YOLOFHead',
-    #     num_classes=80,
-    #     in_channels=512,
-    #     reg_decoded_bbox=True,
-    #     anchor_generator=dict(
-    #         type='AnchorGenerator',
-    #         ratios=[1.0],
-    #         scales=[1, 2, 4, 8, 16],
-    #         strides=[32]),
-    #     bbox_coder=dict(
-    #         type='DeltaXYWHBBoxCoder',
-    #         target_means=[.0, .0, .0, .0],
-    #         target_stds=[1., 1., 1., 1.],
-    #         add_ctr_clamp=True,
-    #         ctr_clamp=32),
-    #     loss_cls=dict(
-    #         type='FocalLoss',
-    #         use_sigmoid=True,
-    #         gamma=2.0,
-    #         alpha=0.25,
-    #         loss_weight=1.0),
-    #     loss_bbox=dict(type='GIoULoss', loss_weight=1.0)),
-    # training and testing settings
-    # train_cfg=dict(
-    #     assigner=dict(
-    #         type='UniformAssigner', pos_ignore_thr=0.15, neg_ignore_thr=0.7),
-    #     allowed_border=-1,
-    #     pos_weight=-1,
-    #     debug=False),
-    # neck=dict(
-    #     type='FPN',
-    #     in_channels=[256, 512, 1024, 2048],
-    #     out_channels=256,
-    #     start_level=1,
-    #     add_extra_convs='on_input',
-    #     num_outs=5),
+        type='SFPN',
+        in_channels=[256, 512, 1024, 2048],
+        out_channels=256,
+        start_level=1,
+        add_extra_convs='on_input',
+        num_outs=5),
     fam_head=dict(
         type='RotatedRetinaHead',
         num_classes=31,
-        in_channels=512,
+        in_channels=256,
         stacked_convs=2,
-        feat_channels=512,
+        feat_channels=256,
         assign_by_circumhbbox=None,
         anchor_generator=dict(
             type='RotatedAnchorGenerator',
             scales=[4],
             ratios=[1.0],
-            strides=[8]),
+            strides=[8, 16, 32, 64, 128]),
         bbox_coder=dict(
             type='DeltaXYWHAOBBoxCoder',
             angle_range=angle_version,
@@ -91,17 +54,17 @@ model = dict(
     align_cfgs=dict(
         type='AlignConv',
         kernel_size=3,
-        channels=512,
+        channels=256,
         featmap_strides=[8, 16, 32, 64, 128]),
     odm_head=dict(
         type='ODMRefineHead',
         num_classes=31,
-        in_channels=512,
+        in_channels=256,
         stacked_convs=2,
-        feat_channels=512,
+        feat_channels=256,
         assign_by_circumhbbox=None,
         anchor_generator=dict(
-            type='PseudoAnchorGenerator', strides=[8]),
+            type='PseudoAnchorGenerator', strides=[8, 16, 32, 64, 128]),
         bbox_coder=dict(
             type='DeltaXYWHAOBBoxCoder',
             angle_range=angle_version,
@@ -146,19 +109,13 @@ model = dict(
         score_thr=0.05,
         nms=dict(iou_thr=0.1),
         max_per_img=2000))
-    # test_cfg=dict(
-    #     nms_pre=1000,
-    #     min_bbox_size=0,
-    #     score_thr=0.05,
-    #     nms=dict(type='nms', iou_threshold=0.6),
-    #     max_per_img=100))
 
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
-    dict(type='RResize', img_scale=(640, 640)),
+    dict(type='RResize', img_scale=(800, 800)),
     dict(
         type='RRandomFlip',
         flip_ratio=[0.25, 0.25, 0.25],
@@ -173,3 +130,5 @@ data = dict(
     train=dict(pipeline=train_pipeline, version=angle_version),
     val=dict(version=angle_version),
     test=dict(version=angle_version))
+evaluation = dict(
+    save_best='auto', interval=1, dynamic_intervals=[(45, 1)], metric='mAP')
