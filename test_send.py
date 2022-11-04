@@ -1,6 +1,6 @@
 import requests
 
-filename = 'data/HRSC2016/FullDataSet/AllImages/100000001.bmp'
+filename = 'data/HRSC2016/FullDataSet/AllImages/100000019.bmp'
 url = 'http://127.0.0.1:5000'
 
 files = {'file': open(filename, 'rb')}

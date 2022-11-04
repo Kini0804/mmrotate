@@ -60,9 +60,9 @@ def init_detector(config, checkpoint=None, device='cuda:0', cfg_options=None):
 
 def inference_detector_by_patches(model,
                                   img,
-                                  sizes=[32,64],
-                                  steps=[4,8],
-                                  ratios=[1,2],
+                                  sizes=[1924],
+                                  steps=[400],
+                                  ratios=[1],
                                   merge_iou_thr=[0.5],
                                   bs=1):
     """inference patches with the detector.
@@ -96,8 +96,8 @@ def inference_detector_by_patches(model,
     height, width = img.shape[:2]
     sizes, steps = get_multiscale_patch(sizes, steps, ratios)
     windows = slide_window(width, height, sizes, steps)
-
-    results = []
+    print(len(windows))
+    results = None
     start = 0
     while True:
         # prepare patch data
@@ -127,16 +127,17 @@ def inference_detector_by_patches(model,
 
         # forward the model
         with torch.no_grad():
-            results.extend(model(return_loss=False, rescale=True, **data))
+            # results.extend(model(return_loss=False, rescale=True, **data))
+            results = model(return_loss=False, rescale=True, **data)
 
         if end >= len(windows):
             break
         start += bs
-    print(results)
-    results = merge_results(
-        results,
-        windows[:, :2],
-        img_shape=(width, height),
-        iou_thr=merge_iou_thr,
-        device=device)
-    return results
+        print(start)
+    # results = merge_results(
+    #     results,
+    #     windows[:, :2],
+    #     img_shape=(width, height),
+    #     iou_thr=merge_iou_thr,
+    #     device=device)
+    return results[0]
