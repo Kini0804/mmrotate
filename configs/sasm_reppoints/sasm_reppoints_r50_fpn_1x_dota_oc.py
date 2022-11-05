@@ -13,3 +13,5 @@ model = dict(
             allowed_border=-1,
             pos_weight=-1,
             debug=False)))
+evaluation = dict(
+    save_best='auto', interval=5, dynamic_intervals=[(45, 1)], metric='mAP')

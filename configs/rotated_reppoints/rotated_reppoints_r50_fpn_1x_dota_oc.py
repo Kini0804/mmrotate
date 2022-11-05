@@ -1,5 +1,5 @@
 _base_ = [
-    '../_base_/datasets/hrsc.py', '../_base_/schedules/schedule_3x.py',
+    '../_base_/datasets/hrsc_false.py', '../_base_/schedules/schedule_3x.py',
     '../_base_/default_runtime.py'
 ]
 
@@ -28,7 +28,7 @@ model = dict(
         norm_cfg=norm_cfg),
     bbox_head=dict(
         type='RotatedRepPointsHead',
-        num_classes=31,
+        num_classes=1,
         in_channels=256,
         feat_channels=256,
         point_feat_channels=256,

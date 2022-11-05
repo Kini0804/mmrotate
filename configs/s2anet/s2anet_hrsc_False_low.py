@@ -1,5 +1,5 @@
 _base_ = [
-    '../_base_/datasets/hrsc.py', '../_base_/schedules/schedule_3x.py',
+    '../_base_/datasets/hrsc_false.py', '../_base_/schedules/schedule_3x.py',
     '../_base_/default_runtime.py'
 ]
 
@@ -22,11 +22,11 @@ model = dict(
         in_channels=[256, 512, 1024, 2048],
         out_channels=256,
         start_level=1,
-        # add_extra_convs='on_input',
+        add_extra_convs='on_input',
         num_outs=5),
     fam_head=dict(
         type='RotatedRetinaHead',
-        num_classes=31,
+        num_classes=1,
         in_channels=256,
         stacked_convs=2,
         feat_channels=256,
@@ -58,7 +58,7 @@ model = dict(
         featmap_strides=[8, 16, 32, 64, 128]),
     odm_head=dict(
         type='ODMRefineHead',
-        num_classes=31,
+        num_classes=1,
         in_channels=256,
         stacked_convs=2,
         feat_channels=256,
@@ -84,8 +84,8 @@ model = dict(
         fam_cfg=dict(
             assigner=dict(
                 type='MaxIoUAssigner',
-                pos_iou_thr=0.5,
-                neg_iou_thr=0.4,
+                pos_iou_thr=0.1,
+                neg_iou_thr=0.1,
                 min_pos_iou=0,
                 ignore_iof_thr=-1,
                 iou_calculator=dict(type='RBboxOverlaps2D')),
@@ -95,8 +95,8 @@ model = dict(
         odm_cfg=dict(
             assigner=dict(
                 type='MaxIoUAssigner',
-                pos_iou_thr=0.5,
-                neg_iou_thr=0.4,
+                pos_iou_thr=0.1,
+                neg_iou_thr=0.1,
                 min_pos_iou=0,
                 ignore_iof_thr=-1,
                 iou_calculator=dict(type='RBboxOverlaps2D')),
@@ -131,4 +131,4 @@ data = dict(
     val=dict(version=angle_version),
     test=dict(version=angle_version))
 evaluation = dict(
-    save_best='auto', interval=1, dynamic_intervals=[(45, 1)], metric='mAP')
+    save_best='auto', interval=5, dynamic_intervals=[(80, 1)], metric='mAP')
