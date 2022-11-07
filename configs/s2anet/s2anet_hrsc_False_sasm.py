@@ -82,24 +82,26 @@ model = dict(
         loss_bbox=dict(type='SmoothL1Loss', beta=0.11, loss_weight=1.0)),
     train_cfg=dict(
         fam_cfg=dict(
-            assigner=dict(
-                type='MaxIoUAssigner',
-                pos_iou_thr=0.1,
-                neg_iou_thr=0.1,
-                min_pos_iou=0,
-                ignore_iof_thr=-1,
-                iou_calculator=dict(type='RBboxOverlaps2D')),
+            # assigner=dict(
+            #     type='MaxIoUAssigner',
+            #     pos_iou_thr=0.3,
+            #     neg_iou_thr=0.2,
+            #     min_pos_iou=0,
+            #     ignore_iof_thr=-1,
+            #     iou_calculator=dict(type='RBboxOverlaps2D')),
+            assigner=dict(type='SASAssigner', topk=9),
             allowed_border=-1,
             pos_weight=-1,
             debug=False),
         odm_cfg=dict(
-            assigner=dict(
-                type='MaxIoUAssigner',
-                pos_iou_thr=0.1,
-                neg_iou_thr=0.1,
-                min_pos_iou=0,
-                ignore_iof_thr=-1,
-                iou_calculator=dict(type='RBboxOverlaps2D')),
+            # assigner=dict(
+            #     type='MaxIoUAssigner',
+            #     pos_iou_thr=0.3,
+            #     neg_iou_thr=0.2,
+            #     min_pos_iou=0,
+            #     ignore_iof_thr=-1,
+            #     iou_calculator=dict(type='RBboxOverlaps2D')),
+            assigner=dict(type='SASAssigner', topk=9),
             allowed_border=-1,
             pos_weight=-1,
             debug=False)),
