@@ -1,4 +1,4 @@
-_base_ = ['../rotated_reppoints/rotated_reppoints_hrsc_FPN.py']
+_base_ = ['../rotated_reppoints/rotated_reppoints_hrsc_AFPN.py']
 
 model = dict(
     bbox_head=dict(
