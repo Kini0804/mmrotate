@@ -13,17 +13,33 @@ class BasicBlock(nn.Module):
 
     expansion = 1
     
-    def __init__(self, in_channels, out_channels, stride=1, norm_cfg=dict(type='BN', requires_grad=True)):
+    def __init__(self,
+                 in_channels,
+                 mid_channels,
+                 dilation,
+                 norm_cfg=dict(type='BN', requires_grad=True),
+                 stride=1):
         super().__init__()
-        self.shrinkage = Shrinkage(out_channels, gap_size=(1, 1))
+        self.shrinkage = Shrinkage(in_channels, gap_size=(1, 1))
         #residual function
         self.residual_function = nn.Sequential(
             # nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False),
-            ConvModule(in_channels, 128, 1, norm_cfg=norm_cfg),
             # nn.BatchNorm2d(out_channels),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(out_channels, out_channels * BasicBlock.expansion, kernel_size=3, padding=1, bias=False),
-            nn.BatchNorm2d(out_channels * BasicBlock.expansion),
+            # ConvModule(in_channels, 128, 1, norm_cfg=norm_cfg),
+            # nn.ReLU(inplace=True),
+            # nn.Conv2d(out_channels, out_channels * BasicBlock.expansion, kernel_size=3, padding=1, bias=False),
+            # nn.BatchNorm2d(out_channels * BasicBlock.expansion),
+            ConvModule(
+                in_channels, mid_channels, 1, norm_cfg=norm_cfg),
+            ConvModule(
+                mid_channels,
+                mid_channels,
+                3,
+                padding=dilation,
+                dilation=dilation,
+                norm_cfg=norm_cfg),
+            ConvModule(
+                mid_channels, in_channels, 1, norm_cfg=norm_cfg),
             self.shrinkage
         )
         #shortcut
@@ -31,10 +47,10 @@ class BasicBlock(nn.Module):
 
         #the shortcut output dimension is not the same with residual function
         #use 1*1 convolution to match the dimension
-        if stride != 1 or in_channels != BasicBlock.expansion * out_channels:
+        if stride != 1 or in_channels != BasicBlock.expansion * in_channels:
             self.shortcut = nn.Sequential(
-                nn.Conv2d(in_channels, out_channels * BasicBlock.expansion, kernel_size=1, stride=stride, bias=False),
-                nn.BatchNorm2d(out_channels * BasicBlock.expansion)
+                nn.Conv2d(in_channels, in_channels * BasicBlock.expansion, kernel_size=1, stride=stride, bias=False),
+                nn.BatchNorm2d(in_channels * BasicBlock.expansion)
             )
 
     def forward(self, x):
@@ -248,17 +264,10 @@ class RSDFPN(BaseModule):
             for j in range(4):
                 dilation = block_dilations[j]
                 encoder_blocks.append(
-                    Bottleneck(
+                    BasicBlock(
                         out_channels,
                         128,
                         dilation=dilation))
-            encoder_blocks.append(
-                BasicBlock(
-                    out_channels,
-                    out_channels,
-                    1
-                )
-            )
             self.dilated_encoder_blocks.append(nn.Sequential(*encoder_blocks))
 
         # add extra conv layers (e.g., RetinaNet)

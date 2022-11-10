@@ -8,17 +8,17 @@ import cv2
 import numpy as np
 import shutil
 
-ann_dir = r"C:\Graduate\mmdetection\data\SeaShips\VOC2007\Annotations"
-img_dir = r"C:\Graduate\mmdetection\data\SeaShips\VOC2007\JPEGImages"
-train = r"C:\Graduate\mmdetection\data\SeaShips\VOC2007\ImageSets\Main\train.txt"
-test = r"C:\Graduate\mmdetection\data\SeaShips\VOC2007\ImageSets\Main\test.txt"
-val = r"C:\Graduate\mmdetection\data\SeaShips\VOC2007\ImageSets\Main\val.txt"
-trainval = r"C:\Graduate\mmdetection\data\SeaShips\VOC2007\ImageSets\Main\trainval.txt"
+ann_dir = "/Users/liushaodong/AGraduateDesign/dataset/SeaShips/Annotations"
+img_dir = "/Users/liushaodong/AGraduateDesign/dataset/SeaShips/JPEGImages"
+train = "/Users/liushaodong/AGraduateDesign/dataset/SeaShips/ImageSets/Main/train.txt"
+test = "/Users/liushaodong/AGraduateDesign/dataset/SeaShips/ImageSets/Main/test.txt"
+val = "/Users/liushaodong/AGraduateDesign/dataset/SeaShips/ImageSets/Main/val.txt"
+trainval = "/Users/liushaodong/AGraduateDesign/dataset/SeaShips/ImageSets/Main/trainval.txt"
 
-dst_train = r"C:\Graduate\mmrotate\data\ShipData\train"
-dst_test = r"C:\Graduate\mmrotate\data\ShipData\test"
-dst_val = r"C:\Graduate\mmrotate\data\ShipData\val"
-dst_trainval = r"C:\Graduate\mmrotate\data\ShipData\trainval"
+dst_train = "/Users/liushaodong/AGraduateDesign/code/mmrotate/data/ShipData/train"
+dst_test = "/Users/liushaodong/AGraduateDesign/code/mmrotate/data/ShipData/test"
+dst_val = "/Users/liushaodong/AGraduateDesign/code/mmrotate/data/ShipData/val"
+dst_trainval = "/Users/liushaodong/AGraduateDesign/code/mmrotate/data/ShipData/trainval"
 
 def edit_xml(xml_file, image_file, dest_path, file_name):
     if ".xml" not in xml_file:
@@ -26,8 +26,8 @@ def edit_xml(xml_file, image_file, dest_path, file_name):
     tree = ET.parse(xml_file)
     objs = tree.findall('object')
 
-    txt = dest_path + "\\annfiles\\" + file_name.replace("\n",".txt")
-    dst_image = dest_path + "\\images\\" + file_name.replace("\n",".jpg")
+    txt = dest_path + "/annfiles/" + file_name.replace("\n",".txt")
+    dst_image = dest_path + "/images/" + file_name.replace("\n",".jpg")
     cmd = 'copy "%s" "%s"' % (image_file, dst_image)
     shutil.copyfile(image_file, dst_image)
     png = image_file
@@ -104,27 +104,27 @@ if __name__ == '__main__':
     image_list = os.listdir(img_dir)
     ann_list = os.listdir(ann_dir)
     i = 0
-    # with open(train, 'r') as f:
-    #     for line in f.readlines():
-    #         xml_file = os.path.join(ann_dir, line.replace("\n",".xml"))
-    #         image_file = os.path.join(img_dir, line.replace("\n",".jpg"))
-    #         edit_xml(xml_file, image_file, dst_train, line)
-    #         i += 1
-    #         print(i)
-    # with open(test, 'r') as f:
-    #     for line in f.readlines():
-    #         xml_file = os.path.join(ann_dir, line.replace("\n",".xml"))
-    #         image_file = os.path.join(img_dir, line.replace("\n",".jpg"))
-    #         edit_xml(xml_file, image_file, dst_test, line)
-    #         i += 1
-    #         print(i)
-    # with open(val, 'r') as f:
-    #     for line in f.readlines():
-    #         xml_file = os.path.join(ann_dir, line.replace("\n",".xml"))
-    #         image_file = os.path.join(img_dir, line.replace("\n",".jpg"))
-    #         edit_xml(xml_file, image_file, dst_val, line)
-    #         i += 1
-    #         print(i)
+    with open(train, 'r') as f:
+        for line in f.readlines():
+            xml_file = os.path.join(ann_dir, line.replace("\n",".xml"))
+            image_file = os.path.join(img_dir, line.replace("\n",".jpg"))
+            edit_xml(xml_file, image_file, dst_train, line)
+            i += 1
+            print(i)
+    with open(test, 'r') as f:
+        for line in f.readlines():
+            xml_file = os.path.join(ann_dir, line.replace("\n",".xml"))
+            image_file = os.path.join(img_dir, line.replace("\n",".jpg"))
+            edit_xml(xml_file, image_file, dst_test, line)
+            i += 1
+            print(i)
+    with open(val, 'r') as f:
+        for line in f.readlines():
+            xml_file = os.path.join(ann_dir, line.replace("\n",".xml"))
+            image_file = os.path.join(img_dir, line.replace("\n",".jpg"))
+            edit_xml(xml_file, image_file, dst_val, line)
+            i += 1
+            print(i)
     with open(trainval, 'r') as f:
         for line in f.readlines():
             xml_file = os.path.join(ann_dir, line.replace("\n",".xml"))
