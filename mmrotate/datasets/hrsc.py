@@ -28,14 +28,28 @@ class HRSCDataset(CustomDataset):
 
     CLASSES = None
     HRSC_CLASS = ('ship', )
-    HRSC_CLASSES = ('ship', 'aircraft carrier', 'warcraft', 'merchant ship',
-                    'Nimitz', 'Enterprise', 'Arleigh Burke', 'WhidbeyIsland',
-                    'Perry', 'Sanantonio', 'Ticonderoga', 'Kitty Hawk',
-                    'Kuznetsov', 'Abukuma', 'Austen', 'Tarawa', 'Blue Ridge',
-                    'Container', 'OXo|--)', 'Car carrier([]==[])',
-                    'Hovercraft', 'yacht', 'CntShip(_|.--.--|_]=', 'Cruise',
-                    'submarine', 'lute', 'Medical', 'Car carrier(======|',
-                    'Ford-class', 'Midway-class', 'Invincible-class')
+    # HRSC_CLASSES = ('ship', 'aircraft carrier', 'warcraft', 'merchant ship',
+    #                 'Nimitz', 'Enterprise', 'Arleigh Burke', 'WhidbeyIsland',
+    #                 'Perry', 'Sanantonio', 'Ticonderoga', 'Kitty Hawk',
+    #                 'Kuznetsov', 'Abukuma', 'Austen', 'Tarawa', 'Blue Ridge',
+    #                 'Container', 'OXo|--)', 'Car carrier([]==[])',
+    #                 'Hovercraft', 'yacht', 'CntShip(_|.--.--|_]=', 'Cruise',
+    #                 'submarine', 'lute', 'Medical', 'Car carrier(======|',
+    #                 'Ford-class', 'Midway-class', 'Invincible-class')
+    # HRSC_CLASS = ('ship', 'aircraft carrier', 'warcraft', 'merchant ship',
+    #                 'Nimitz class aircraft carrier', 'Enterprise class aircraft carrier', 'Arleigh Burke class destroyers', 'WhidbeyIsland class landing craft', 'Perry class frigate',
+    #                 'Sanantonio class amphibious transport dock', 'Ticonderoga class cruiser', 'Kitty Hawk class aircraft carrier',
+    #                 'Admiral Kuznetsov aircraft carrier', 'Abukuma-class destroyer escort', 'Austen class amphibious transport dock',
+    #                 'Tarawa-class amphibious assault ship', 'USS Blue Ridge (LCC-19)', 'Container ship', 'OXo|--)', 'Car carrier([]==[])',
+    #                 'Hovercraft', 'yacht', 'Container ship(_|.--.--|_]=', 'Cruise ship', 'submarine', 'lute', 'Medical ship', 'Car carrier(======|',
+    #                 'Ford-class aircraft carriers', 'Midway-class aircraft carrier', 'Invincible-class aircraft carrier')
+    HRSC_CLASSES = ('船', '航母', '军舰', '商船', '尼米兹级航母',
+                    '企业级航母', '阿利伯克级驱逐舰', '惠德贝岛级船坞登陆舰', '佩里级护卫舰','圣安东尼奥级两栖船坞运输舰',
+                    '提康德罗加级巡洋舰', '小鹰级航母', '俄罗斯库兹涅佐夫号航母', '阿武隈级护卫舰', '奥斯汀级两栖船坞运输舰',
+                    '塔拉瓦级通用两栖攻击舰', '蓝岭级指挥舰', '集装箱货船','尾部OX头部圆指挥舰', '运输汽车船([]==[])',
+                    '气垫船', '游艇', '货船(_|.--.--|_]=', '游轮', '潜艇',
+                    '琵琶形军舰', '医疗船','运输汽车船(======|', '福特级航空母舰', '中途号航母',
+                    '无敌级航空母舰')
     HRSC_CLASSES_ID = ('01', '02', '03', '04', '05', '06', '07', '08', '09',
                        '10', '11', '12', '13', '14', '15', '16', '17', '18',
                        '19', '20', '22', '24', '25', '26', '27', '28', '29',
@@ -52,6 +66,9 @@ class HRSCDataset(CustomDataset):
                          (120, 166, 157), (110, 76, 0), (174, 57, 255),
                          (199, 100, 0), (72, 0, 118), (255, 179, 240),
                          (0, 125, 92), (209, 0, 151), (188, 208, 182),
+                         (0, 220, 176), (255, 99, 164), (92, 0, 73),
+                         (0, 220, 176), (255, 99, 164), (92, 0, 73),
+                         (0, 220, 176), (255, 99, 164), (92, 0, 73),
                          (0, 220, 176), (255, 99, 164), (92, 0, 73)]
 
     def __init__(self,
@@ -73,6 +90,7 @@ class HRSCDataset(CustomDataset):
                 ('1' + '0' * 6 + cls_id): i
                 for i, cls_id in enumerate(self.HRSC_CLASSES_ID)
             }
+            print(self.catid2label)
         else:
             HRSCDataset.CLASSES = self.HRSC_CLASS
         # self.cat2label = {cat: i for i, cat in enumerate(self.CLASSES)}
@@ -89,13 +107,16 @@ class HRSCDataset(CustomDataset):
         """
 
         data_infos = []
+        print(self.img_subdir)
         img_ids = mmcv.list_from_file(ann_file)
         for img_id in img_ids:
             data_info = {}
 
             filename = osp.join(self.img_subdir, f'{img_id}.bmp')
             data_info['filename'] = f'{img_id}.bmp'
-            xml_path = osp.join(self.img_prefix, self.ann_subdir,
+            # xml_path = osp.join(self.img_prefix, self.ann_subdir,
+            #                     f'{img_id}.xml')
+            xml_path = osp.join(self.ann_subdir,
                                 f'{img_id}.xml')
             tree = ET.parse(xml_path)
             root = tree.getroot()

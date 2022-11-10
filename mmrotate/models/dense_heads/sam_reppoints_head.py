@@ -326,7 +326,7 @@ class SAMRepPointsHead(BaseDenseHead):
             assigner = self.refine_assigner
             pos_weight = self.train_cfg.refine.pos_weight
             if self.train_cfg.refine.assigner.type not in (
-                    'ATSSAssigner', 'ATSSConvexAssigner', 'SASAssigner'):
+                    'ATSSAssigner', 'ATSSConvexAssigner', 'SASAssigner', 'MAXSASAssigner'):
                 assign_result = assigner.assign(
                     proposals, gt_bboxes, overlaps, gt_bboxes_ignore,
                     None if self.sampling else gt_labels)

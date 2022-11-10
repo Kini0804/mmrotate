@@ -1,4 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import os
+os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 import argparse
 import copy
 import os

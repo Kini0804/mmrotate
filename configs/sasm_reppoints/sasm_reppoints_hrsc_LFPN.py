@@ -1,4 +1,4 @@
-_base_ = ['../rotated_reppoints/rotated_reppoints_r50_fpn_1x_dota_oc.py']
+_base_ = ['../rotated_reppoints/rotated_reppoints_hrsc_LFPN.py']
 
 model = dict(
     bbox_head=dict(
@@ -14,4 +14,4 @@ model = dict(
             pos_weight=-1,
             debug=False)))
 evaluation = dict(
-    save_best='auto', interval=5, dynamic_intervals=[(45, 1)], metric='mAP')
+    save_best='auto', interval=5, dynamic_intervals=[(85, 1)], metric='mAP')

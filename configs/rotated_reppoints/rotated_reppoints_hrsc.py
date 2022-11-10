@@ -95,3 +95,5 @@ data = dict(
     val=dict(version=angle_version),
     test=dict(version=angle_version))
 optimizer = dict(lr=0.008)
+evaluation = dict(
+    save_best='auto', interval=5, dynamic_intervals=[(85, 1)], metric='mAP')

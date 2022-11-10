@@ -1,8 +1,8 @@
 _base_ = [
-    '../_base_/datasets/hrsc.py', '../_base_/schedules/schedule_40e.py',
+    '../_base_/datasets/hrsc_false.py', '../_base_/schedules/schedule_3x.py',
     '../_base_/default_runtime.py'
 ]
-resume_from = "work_dirs/s2anet_r50_fpn_1x_dota_le135/latest.pth"
+
 angle_version = 'le135'
 model = dict(
     type='S2ANet',
@@ -26,7 +26,7 @@ model = dict(
         num_outs=5),
     fam_head=dict(
         type='RotatedRetinaHead',
-        num_classes=31,
+        num_classes=1,
         in_channels=256,
         stacked_convs=2,
         feat_channels=256,
@@ -58,7 +58,7 @@ model = dict(
         featmap_strides=[8, 16, 32, 64, 128]),
     odm_head=dict(
         type='ODMRefineHead',
-        num_classes=31,
+        num_classes=1,
         in_channels=256,
         stacked_convs=2,
         feat_channels=256,
@@ -82,24 +82,26 @@ model = dict(
         loss_bbox=dict(type='SmoothL1Loss', beta=0.11, loss_weight=1.0)),
     train_cfg=dict(
         fam_cfg=dict(
-            assigner=dict(
-                type='MaxIoUAssigner',
-                pos_iou_thr=0.5,
-                neg_iou_thr=0.4,
-                min_pos_iou=0,
-                ignore_iof_thr=-1,
-                iou_calculator=dict(type='RBboxOverlaps2D')),
+            # assigner=dict(
+            #     type='MaxIoUAssigner',
+            #     pos_iou_thr=0.3,
+            #     neg_iou_thr=0.2,
+            #     min_pos_iou=0,
+            #     ignore_iof_thr=-1,
+            #     iou_calculator=dict(type='RBboxOverlaps2D')),
+            assigner=dict(type='SASAssigner', topk=9),
             allowed_border=-1,
             pos_weight=-1,
             debug=False),
         odm_cfg=dict(
-            assigner=dict(
-                type='MaxIoUAssigner',
-                pos_iou_thr=0.5,
-                neg_iou_thr=0.4,
-                min_pos_iou=0,
-                ignore_iof_thr=-1,
-                iou_calculator=dict(type='RBboxOverlaps2D')),
+            # assigner=dict(
+            #     type='MaxIoUAssigner',
+            #     pos_iou_thr=0.3,
+            #     neg_iou_thr=0.2,
+            #     min_pos_iou=0,
+            #     ignore_iof_thr=-1,
+            #     iou_calculator=dict(type='RBboxOverlaps2D')),
+            assigner=dict(type='SASAssigner', topk=9),
             allowed_border=-1,
             pos_weight=-1,
             debug=False)),
@@ -115,7 +117,7 @@ img_norm_cfg = dict(
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
-    dict(type='RResize', img_scale=(640, 640)),
+    dict(type='RResize', img_scale=(800, 800)),
     dict(
         type='RRandomFlip',
         flip_ratio=[0.25, 0.25, 0.25],
@@ -130,3 +132,5 @@ data = dict(
     train=dict(pipeline=train_pipeline, version=angle_version),
     val=dict(version=angle_version),
     test=dict(version=angle_version))
+evaluation = dict(
+    save_best='auto', interval=5, dynamic_intervals=[(80, 1)], metric='mAP')
